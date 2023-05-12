@@ -16,40 +16,46 @@ const canvas = document.querySelector("canvas.webgl");
 const scene = new THREE.Scene();
 
 /**
+ * Textures
+ */
+const textureLoader = new THREE.TextureLoader();
+
+/**
+ * House
+ */
+// Temporary sphere
+const sphere = new THREE.Mesh(
+  new THREE.SphereGeometry(1, 32, 32),
+  new THREE.MeshStandardMaterial({ roughness: 0.7 })
+);
+sphere.position.y = 1;
+scene.add(sphere);
+
+// Floor
+const floor = new THREE.Mesh(
+  new THREE.PlaneGeometry(20, 20),
+  new THREE.MeshStandardMaterial({ color: "#a9c388" })
+);
+floor.rotation.x = -Math.PI * 0.5;
+floor.position.y = 0;
+scene.add(floor);
+
+/**
  * Lights
  */
 // Ambient light
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+const ambientLight = new THREE.AmbientLight("#ffffff", 0.5);
 gui.add(ambientLight, "intensity").min(0).max(1).step(0.001);
 scene.add(ambientLight);
 
 // Directional light
-const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-directionalLight.position.set(2, 2, -1);
-gui.add(directionalLight, "intensity").min(0).max(1).step(0.001);
-gui.add(directionalLight.position, "x").min(-5).max(5).step(0.001);
-gui.add(directionalLight.position, "y").min(-5).max(5).step(0.001);
-gui.add(directionalLight.position, "z").min(-5).max(5).step(0.001);
-scene.add(directionalLight);
-
-/**
- * Materials
- */
-const material = new THREE.MeshStandardMaterial();
-material.roughness = 0.7;
-gui.add(material, "metalness").min(0).max(1).step(0.001);
-gui.add(material, "roughness").min(0).max(1).step(0.001);
-
-/**
- * Objects
- */
-const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.5, 32, 32), material);
-
-const plane = new THREE.Mesh(new THREE.PlaneGeometry(5, 5), material);
-plane.rotation.x = -Math.PI * 0.5;
-plane.position.y = -0.5;
-
-scene.add(sphere, plane);
+const moonLight = new THREE.DirectionalLight("#ffffff", 0.5);
+moonLight.position.set(4, 5, -2);
+gui.add(moonLight, "intensity").min(0).max(1).step(0.001);
+gui.add(moonLight.position, "x").min(-5).max(5).step(0.001);
+gui.add(moonLight.position, "y").min(-5).max(5).step(0.001);
+gui.add(moonLight.position, "z").min(-5).max(5).step(0.001);
+scene.add(moonLight);
 
 /**
  * Sizes
@@ -83,9 +89,9 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   100
 );
-camera.position.x = 1;
-camera.position.y = 1;
-camera.position.z = 2;
+camera.position.x = 4;
+camera.position.y = 2;
+camera.position.z = 5;
 scene.add(camera);
 
 // Controls
