@@ -2,9 +2,10 @@ import "./style.css";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import * as dat from "dat.gui";
-import { FontLoader } from "three/addons/loaders/FontLoader.js";
-import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
 
+/**
+ * Base
+ */
 // Debug
 const gui = new dat.GUI();
 
@@ -14,78 +15,41 @@ const canvas = document.querySelector("canvas.webgl");
 // Scene
 const scene = new THREE.Scene();
 
-// Axes helper
-// const axesHelper = new THREE.AxesHelper();
-// scene.add(axesHelper);
+/**
+ * Lights
+ */
+// Ambient light
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+gui.add(ambientLight, "intensity").min(0).max(1).step(0.001);
+scene.add(ambientLight);
+
+// Directional light
+const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+directionalLight.position.set(2, 2, -1);
+gui.add(directionalLight, "intensity").min(0).max(1).step(0.001);
+gui.add(directionalLight.position, "x").min(-5).max(5).step(0.001);
+gui.add(directionalLight.position, "y").min(-5).max(5).step(0.001);
+gui.add(directionalLight.position, "z").min(-5).max(5).step(0.001);
+scene.add(directionalLight);
 
 /**
- * Textures
+ * Materials
  */
-const textureLoader = new THREE.TextureLoader();
-const matcapTexture = textureLoader.load("./textures/matcaps/5.png");
+const material = new THREE.MeshStandardMaterial();
+material.roughness = 0.7;
+gui.add(material, "metalness").min(0).max(1).step(0.001);
+gui.add(material, "roughness").min(0).max(1).step(0.001);
 
 /**
- * Fonts
+ * Objects
  */
-const fontLoader = new FontLoader();
-fontLoader.load("fonts/Delius_Regular.json", (font) => {
-  const textGeometry = new TextGeometry("Hh Dreamer", {
-    font: font,
-    size: 0.5,
-    height: 0.2,
-    curveSegments: 5,
-    bevelEnabled: true,
-    bevelThickness: 0.03,
-    bevelSize: 0.02,
-    bevelOffset: 0,
-    bevelSegments: 3,
-  });
+const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.5, 32, 32), material);
 
-  // textGeometry.computeBoundingBox();
-  // // console.log(textGeometry.boundingBox);
-  // textGeometry.translate(
-  //   (-textGeometry.boundingBox.max.x - 0.02) / 2,
-  //   (-textGeometry.boundingBox.max.y - 0.02) / 2,
-  //   (-textGeometry.boundingBox.max.z - 0.03) / 2
-  // );
+const plane = new THREE.Mesh(new THREE.PlaneGeometry(5, 5), material);
+plane.rotation.x = -Math.PI * 0.5;
+plane.position.y = -0.5;
 
-  // This is the simple way of doing above code
-  textGeometry.center();
-
-  // We change the name to use it only once
-  // const textMaterial = new THREE.MeshMatcapMaterial({ matcap: matcapTexture });
-  const material = new THREE.MeshMatcapMaterial({ matcap: matcapTexture });
-  // textMaterial.wireframe = true;
-  const text = new THREE.Mesh(textGeometry, material);
-  scene.add(text);
-
-  console.time("donuts");
-  // important not to create geometry and material in the loop (performance)
-  const donutGeometry = new THREE.TorusGeometry(0.3, 0.2, 20, 45);
-  // const donutMaterial = new THREE.MeshMatcapMaterial({
-  //   matcap: matcapTexture,
-  // });
-  for (let i = 0; i < 200; i++) {
-    const donut = new THREE.Mesh(donutGeometry, material);
-
-    donut.position.x = (Math.random() - 0.5) * 10;
-    donut.position.y = (Math.random() - 0.5) * 10;
-    donut.position.z = (Math.random() - 0.5) * 10;
-
-    donut.rotation.x = Math.random() * Math.PI;
-    donut.rotation.y = Math.random() * Math.PI;
-    const scale = Math.random();
-    donut.scale.set(scale, scale, scale);
-
-    scene.add(donut);
-  }
-
-  console.timeEnd("donuts");
-});
-
-/**
- * Object
- */
+scene.add(sphere, plane);
 
 /**
  * Sizes
