@@ -1,7 +1,7 @@
 import "./style.css";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import * as dat from "lil-gui";
+import * as dat from "dat.gui";
 
 /**
  * Base
@@ -16,13 +16,33 @@ const canvas = document.querySelector("canvas.webgl");
 const scene = new THREE.Scene();
 
 /**
+ * Textures
+ */
+const textureLoader = new THREE.TextureLoader();
+
+/**
+ * Particles
+ */
+// Geometry
+const particlesGeometry = new THREE.SphereGeometry(1, 32, 32);
+// Material
+const particlesMaterial = new THREE.PointsMaterial({
+  size: 0.4,
+  sizeAttenuation: false,
+});
+
+// Points
+const particles = new THREE.Points(particlesGeometry, particlesMaterial);
+scene.add(particles);
+
+/**
  * Test cube
  */
 const cube = new THREE.Mesh(
   new THREE.BoxGeometry(1, 1, 1),
   new THREE.MeshBasicMaterial()
 );
-scene.add(cube);
+// scene.add(cube);
 
 /**
  * Sizes
@@ -56,8 +76,6 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   100
 );
-camera.position.x = 3;
-camera.position.y = 3;
 camera.position.z = 3;
 scene.add(camera);
 

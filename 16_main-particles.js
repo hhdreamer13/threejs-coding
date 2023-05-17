@@ -1,7 +1,7 @@
 import "./style.css";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import * as dat from "lil-gui";
+import * as dat from "dat.gui";
 
 /**
  * Base
@@ -16,13 +16,65 @@ const canvas = document.querySelector("canvas.webgl");
 const scene = new THREE.Scene();
 
 /**
+ * Textures
+ */
+const textureLoader = new THREE.TextureLoader();
+const particleTexture = textureLoader.load("/textures/particles/1.png");
+
+/**
+ * Particles
+ */
+// Geometry
+const particlesGeometry = new THREE.BufferGeometry();
+const count = 20000;
+
+const positions = new Float32Array(count * 3);
+
+for (let i = 0; i < count; i++) {
+  positions[i] = (Math.random() - 0.5) * 10;
+}
+
+particlesGeometry.setAttribute(
+  "position",
+  new THREE.BufferAttribute(positions, 3)
+);
+
+// Material
+const particlesMaterial = new THREE.PointsMaterial({
+  transparent: true,
+  alphaMap: particleTexture,
+  // alphaTest: 0.001,
+  depthTest: false,
+  // depthWrite: false,
+  size: 0.1,
+  sizeAttenuation: true,
+  // blending: THREE.AdditiveBlending,
+  vertexColors: true,
+});
+
+// Colors
+const colors = new Float32Array(count * 3);
+
+for (let i = 0; i < count; i++) {
+  colors[i * 3] = Math.random(); // Red component
+  colors[i * 3 + 1] = Math.random(); // Green component
+  colors[i * 3 + 2] = Math.random(); // Blue component
+}
+
+particlesGeometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+
+// Points
+const particles = new THREE.Points(particlesGeometry, particlesMaterial);
+scene.add(particles);
+
+/**
  * Test cube
  */
 const cube = new THREE.Mesh(
   new THREE.BoxGeometry(1, 1, 1),
   new THREE.MeshBasicMaterial()
 );
-scene.add(cube);
+// scene.add(cube);
 
 /**
  * Sizes
@@ -56,8 +108,6 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   100
 );
-camera.position.x = 3;
-camera.position.y = 3;
 camera.position.z = 3;
 scene.add(camera);
 
@@ -81,6 +131,18 @@ const clock = new THREE.Clock();
 
 const tick = () => {
   const elapsedTime = clock.getElapsedTime();
+
+  // Update particles
+  // particles.rotation.y = elapsedTime / 5;
+
+  for (let i = 0; i < count; i++) {
+    const i3 = i * 3;
+    const x = particlesGeometry.attributes.position.array[i3 + 0];
+    particlesGeometry.attributes.position.array[i3 + 1] = Math.sin(
+      elapsedTime + x
+    );
+  }
+  particlesGeometry.attributes.position.needsUpdate = true;
 
   // Update controls
   controls.update();
