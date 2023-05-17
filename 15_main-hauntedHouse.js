@@ -359,18 +359,6 @@ const tick = () => {
   // Update controls
   controls.update();
 
-  // Update camera
-  const cameraRadius = 8; // Set the desired radius for the camera orbit
-  const cameraSpeed = 0.1; // Set the speed of camera rotation
-
-  // Calculate new camera position based on elapsed time and radius
-  const cameraX = Math.cos(elapsedTime * cameraSpeed) * cameraRadius;
-  const cameraZ = Math.sin(elapsedTime * cameraSpeed) * cameraRadius;
-  const cameraY = 1.3 + Math.sin(elapsedTime * 0.08); // Adjust the camera height if needed
-
-  camera.position.set(cameraX, cameraY, cameraZ);
-  camera.lookAt(house.position); // Set the camera to look at the target position
-
   // Render
   renderer.render(scene, camera);
 
