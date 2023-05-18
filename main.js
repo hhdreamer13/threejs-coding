@@ -16,13 +16,26 @@ const canvas = document.querySelector("canvas.webgl");
 const scene = new THREE.Scene();
 
 /**
- * Test cube
+ * Objects
  */
-const cube = new THREE.Mesh(
-  new THREE.BoxGeometry(1, 1, 1),
-  new THREE.MeshBasicMaterial()
+const object1 = new THREE.Mesh(
+  new THREE.SphereGeometry(0.5, 16, 16),
+  new THREE.MeshBasicMaterial({ color: "#ff0000" })
 );
-scene.add(cube);
+object1.position.x = -2;
+
+const object2 = new THREE.Mesh(
+  new THREE.SphereGeometry(0.5, 16, 16),
+  new THREE.MeshBasicMaterial({ color: "#ff0000" })
+);
+
+const object3 = new THREE.Mesh(
+  new THREE.SphereGeometry(0.5, 16, 16),
+  new THREE.MeshBasicMaterial({ color: "#ff0000" })
+);
+object3.position.x = 2;
+
+scene.add(object1, object2, object3);
 
 /**
  * Sizes
@@ -56,8 +69,6 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   100
 );
-camera.position.x = 3;
-camera.position.y = 3;
 camera.position.z = 3;
 scene.add(camera);
 
