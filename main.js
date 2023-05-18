@@ -1,54 +1,13 @@
 import "./style.css";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import * as dat from "dat.gui";
-import * as CANNON from "cannon-es";
-
-/**
- * Debug
- */
-const gui = new dat.GUI();
-const debugObject = {};
-debugObject.createSphere = () => {
-  createSphere(Math.random(), {
-    x: (Math.random() - 0.5) * 3,
-    y: 3,
-    z: (Math.random() - 0.5) * 3,
-  });
-};
-gui.add(debugObject, "createSphere");
-
-debugObject.createBox = () => {
-  createBox(
-    Math.random(),
-    Math.random(),
-    Math.random(),
-
-    {
-      x: (Math.random() - 0.5) * 3,
-      y: 3,
-      z: (Math.random() - 0.5) * 3,
-    }
-  );
-};
-gui.add(debugObject, "createBox");
-
-// Remove the objects
-debugObject.reset = () => {
-  for (const object of objectToUpdate) {
-    //Remove body
-    object.body.removeEventListener("collide", playHitSound);
-    world.removeBody(object.body);
-
-    //Remove mesh
-    scene.remove(object.mesh);
-  }
-};
-gui.add(debugObject, "reset");
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 
 /**
  * Base
  */
+
 // Canvas
 const canvas = document.querySelector("canvas.webgl");
 
@@ -56,81 +15,28 @@ const canvas = document.querySelector("canvas.webgl");
 const scene = new THREE.Scene();
 
 /**
- * Sounds
+ * Models
  */
-const hitSound = new Audio("/physics/sounds/hit.mp3");
-const playHitSound = (collision) => {
-  const impactStrength = collision.contact.getImpactVelocityAlongNormal();
-  const minImpactStrength = 1.5; // Minimum impact strength to play the sound
-  const maxImpactStrength = 5; // Maximum impact strength to reach maximum volume
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath("node_modules/three/examples/jsm/libs/draco/");
 
-  if (impactStrength > minImpactStrength) {
-    // Map the impact strength to a volume range of 0 to 1
-    const volume = Math.max(
-      0,
-      Math.min(
-        (impactStrength - minImpactStrength) /
-          (maxImpactStrength - minImpactStrength),
-        1
-      )
-    );
+const gtlfLoader = new GLTFLoader();
+gtlfLoader.setDRACOLoader(dracoLoader);
 
-    hitSound.volume = volume;
-    hitSound.currentTime = 0;
-    hitSound.play();
-  }
-};
+// gtlfLoader.load("/models/Duck/glTF-Draco/Duck.gltf", (gltf) => {
+//   // scene.add(...gltf.scene.children);
+//   scene.add(gltf.scene);
+// });
+let mixer = null;
+gtlfLoader.load("/models/Fox/glTF/Fox.gltf", (gltf) => {
+  mixer = new THREE.AnimationMixer(gltf.scene);
+  const action = mixer.clipAction(gltf.animations[0]);
 
-/**
- * Textures
- */
-const textureLoader = new THREE.TextureLoader();
-const cubeTextureLoader = new THREE.CubeTextureLoader();
+  action.play();
 
-const environmentMapTexture = cubeTextureLoader.load([
-  "/physics/textures/environmentMaps/0/px.png",
-  "/physics/textures/environmentMaps/0/nx.png",
-  "/physics/textures/environmentMaps/0/py.png",
-  "/physics/textures/environmentMaps/0/ny.png",
-  "/physics/textures/environmentMaps/0/pz.png",
-  "/physics/textures/environmentMaps/0/nz.png",
-]);
-
-/**
- * Physics
- */
-// World
-const world = new CANNON.World();
-world.broadphase = new CANNON.SAPBroadphase(world); // optimization (CPU)
-world.allowSleep = true; // huge performance optimization
-world.gravity.set(0, -9.82, 0);
-
-// Materials
-const defaultMaterial = new CANNON.Material("concrete");
-
-const defaultContactMaterial = new CANNON.ContactMaterial(
-  defaultMaterial,
-  defaultMaterial,
-  {
-    friction: 0.1,
-    restitution: 0.7,
-  }
-);
-world.addContactMaterial(defaultContactMaterial);
-world.defaultContactMaterial = defaultContactMaterial;
-
-// Floor
-const floorShape = new CANNON.Plane();
-const floorBody = new CANNON.Body();
-// floorBody.material = defaultMaterial;
-floorBody.mass = 0; // static and won't move
-floorBody.addShape(floorShape);
-floorBody.quaternion.setFromAxisAngle(new CANNON.Vec3(-1, 0, 0), Math.PI * 0.5);
-world.addBody(floorBody);
-
-/**
- * Test
- */
+  gltf.scene.scale.set(0.025, 0.025, 0.025);
+  scene.add(gltf.scene);
+});
 
 /**
  * Floor
@@ -138,11 +44,9 @@ world.addBody(floorBody);
 const floor = new THREE.Mesh(
   new THREE.PlaneGeometry(10, 10),
   new THREE.MeshStandardMaterial({
-    color: "#777777",
-    metalness: 0.3,
-    roughness: 0.4,
-    envMap: environmentMapTexture,
-    envMapIntensity: 0.5,
+    color: "#444444",
+    metalness: 0,
+    roughness: 0.5,
   })
 );
 floor.receiveShadow = true;
@@ -152,10 +56,10 @@ scene.add(floor);
 /**
  * Lights
  */
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
 scene.add(ambientLight);
 
-const directionalLight = new THREE.DirectionalLight(0xffffff, 0.2);
+const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6);
 directionalLight.castShadow = true;
 directionalLight.shadow.mapSize.set(1024, 1024);
 directionalLight.shadow.camera.far = 15;
@@ -198,11 +102,12 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   100
 );
-camera.position.set(-3, 3, 10);
+camera.position.set(2, 2, 2);
 scene.add(camera);
 
 // Controls
 const controls = new OrbitControls(camera, canvas);
+controls.target.set(0, 0.75, 0);
 controls.enableDamping = true;
 
 /**
@@ -217,102 +122,18 @@ renderer.setSize(sizes.width, sizes.height);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
 /**
- * Utils
- */
-const objectToUpdate = [];
-
-// create sphere
-const sphereGeometry = new THREE.SphereGeometry(1, 20, 20);
-const sphereMaterial = new THREE.MeshStandardMaterial({
-  metalness: 0.3,
-  roughness: 0.4,
-  envMap: environmentMapTexture,
-});
-const createSphere = (radius, position) => {
-  // ThreeJs Mesh
-  const mesh = new THREE.Mesh(sphereGeometry, sphereMaterial);
-  mesh.scale.set(radius, radius, radius);
-  mesh.castShadow = true;
-  mesh.position.copy(position);
-  scene.add(mesh);
-
-  // CannonJs body
-  const shape = new CANNON.Sphere(radius);
-  const body = new CANNON.Body({
-    mass: 1,
-    position: new CANNON.Vec3(0, 3, 0),
-    shape: shape,
-    material: defaultMaterial,
-  });
-  body.position.copy(position);
-  body.addEventListener("collide", playHitSound);
-  world.addBody(body);
-
-  // Save in objects to be update
-  objectToUpdate.push({
-    mesh: mesh,
-    body: body,
-  });
-};
-
-createSphere(0.5, { x: 0, y: 3, z: 0 });
-
-// create box
-const boxGeometry = new THREE.BoxGeometry(1, 1, 1); // optimization (GPU)
-const boxMaterial = new THREE.MeshStandardMaterial({
-  metalness: 0.3,
-  roughness: 0.4,
-  envMap: environmentMapTexture,
-});
-const createBox = (width, height, depth, position) => {
-  // ThreeJs Mesh
-  const mesh = new THREE.Mesh(boxGeometry, boxMaterial);
-  mesh.scale.set(width, height, depth);
-  mesh.castShadow = true;
-  mesh.position.copy(position);
-  scene.add(mesh);
-
-  // CannonJs body
-  const shape = new CANNON.Box(
-    new CANNON.Vec3(width * 0.5, height * 0.5, depth * 0.5)
-  );
-  const body = new CANNON.Body({
-    mass: 1,
-    position: new CANNON.Vec3(0, 3, 0),
-    shape: shape,
-    material: defaultMaterial,
-  });
-  body.position.copy(position);
-  body.addEventListener("collide", playHitSound);
-  world.addBody(body);
-
-  // Save in objects to be update
-  objectToUpdate.push({
-    mesh: mesh,
-    body: body,
-  });
-};
-
-/**
  * Animate
  */
 const clock = new THREE.Clock();
-let oldElapsedTime = 0;
+let previousTime = 0;
 
 const tick = () => {
   const elapsedTime = clock.getElapsedTime();
-  const deltaTime = elapsedTime - oldElapsedTime;
-  oldElapsedTime = elapsedTime;
+  const deltaTime = elapsedTime - previousTime;
+  previousTime = elapsedTime;
 
-  // Update physics world
-  world.step(1 / 60, deltaTime, 3);
-
-  for (const object of objectToUpdate) {
-    object.mesh.position.copy(object.body.position);
-    object.mesh.quaternion.copy(object.body.quaternion); // for box rotation
-  }
-
-  // Update ThreeJs objects
+  // Update mixer
+  if (mixer) mixer.update(deltaTime);
 
   // Update controls
   controls.update();
